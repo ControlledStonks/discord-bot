@@ -1,0 +1,8 @@
+{
+  "discord_token": "",
+  "memcache": {
+    "servers": "",
+    "username": "",
+    "password": ""
+  }
+}
