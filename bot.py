@@ -4,7 +4,6 @@ import discord.ext.commands.bot
 
 
 # todo: check role for change emote perms
-# todo: links to official stream and discord
 
 
 with open('config.json') as config_file:
@@ -42,6 +41,16 @@ async def api_link(ctx):
 @discord_bot.command(name='github-link', aliases=['github'], brief='Get link to our GitHub')
 async def github_link(ctx):
     await ctx.send('https://github.com/ThePogMarketTeam')
+
+
+@discord_bot.command(name='stream-link', aliases=['stream'], brief='Get link to the official Twitch')
+async def stream_link(ctx):
+    await ctx.send('https://twitch.tv/ThePogMarket')
+
+
+@discord_bot.command(name='discord-link', aliases=['discord'], brief='Get link to the official Discord')
+async def discord_link(ctx):
+    await ctx.send('https://discord.gg/hgaJvACRFz')
 
 
 @discord_bot.event
