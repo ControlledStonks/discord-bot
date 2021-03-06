@@ -3,6 +3,10 @@ import bmemcached
 import discord.ext.commands.bot
 
 
+# todo: check role for change emote perms
+# todo: links to official stream and discord
+
+
 with open('config.json') as config_file:
     config = json.load(config_file)
 
@@ -16,15 +20,18 @@ discord_bot = discord.ext.commands.bot.Bot(command_prefix='!', help_command=cust
 
 @discord_bot.command(name='get-emote', aliases=['get'], brief='Get the current spam emote from API')
 async def get_emote(ctx):
-    old_emote = memcache.get('emote')
-    await ctx.send(f'Current emote: {old_emote}')
+    current_emote = memcache.get('emote')
+    await ctx.send(f'Current emote: {current_emote}')
+
+    return current_emote
 
 
 @discord_bot.command(name='set-emote', aliases=['set', 'emote'], brief='Set the current spam emote on API')
 async def set_emote(ctx, new_emote):
-    await ctx.invoke(get_emote)
-    memcache.set('emote', new_emote)
-    await ctx.send(f'Set emote to {new_emote}')
+    current_emote = await ctx.invoke(get_emote)
+    if new_emote != current_emote:
+        memcache.set('emote', new_emote)
+        await ctx.send(f"<@{ctx.author.id}> set emote to {new_emote} <@&{config['ping_role_id']}>")
 
 
 @discord_bot.command(name='api-link', aliases=['api'], brief='Get link to the API with the current spam emote')
