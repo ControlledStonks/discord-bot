@@ -1,6 +1,7 @@
 {
   "discord_token": "",
   "ping_role_id": 817843983089664030,
+  "admin_role_id": 817816818546114620,
     "memcache": {
     "servers": "",
     "username": "",

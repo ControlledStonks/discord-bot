@@ -3,9 +3,6 @@ import bmemcached
 import discord.ext.commands.bot
 
 
-# todo: check role for change emote perms
-
-
 with open('config.json') as config_file:
     config = json.load(config_file)
 
@@ -17,6 +14,14 @@ custom_help_command = discord.ext.commands.DefaultHelpCommand(sort_commands=Fals
 discord_bot = discord.ext.commands.bot.Bot(command_prefix='!', help_command=custom_help_command)
 
 
+async def is_admin(ctx):
+    if config['admin_role_id'] in [r.id for r in ctx.author.roles]:
+        return True
+    else:
+        await ctx.send('You need the Admin role to use this command!')
+        return False
+
+
 @discord_bot.command(name='get-emote', aliases=['get'], brief='Get the current spam emote from API')
 async def get_emote(ctx):
     current_emote = memcache.get('emote')
@@ -26,6 +31,7 @@ async def get_emote(ctx):
 
 
 @discord_bot.command(name='set-emote', aliases=['set', 'emote'], brief='Set the current spam emote on API')
+@discord.ext.commands.check(is_admin)
 async def set_emote(ctx, new_emote):
     current_emote = await ctx.invoke(get_emote)
     if new_emote != current_emote:
