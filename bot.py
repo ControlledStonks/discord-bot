@@ -46,7 +46,7 @@ async def api_link(ctx):
 
 @discord_bot.command(name='github-link', aliases=['github'], brief='Get link to our GitHub')
 async def github_link(ctx):
-    await ctx.send('https://github.com/ThePogMarketTeam')
+    await ctx.send('https://github.com/ControlledStonks')
 
 
 @discord_bot.command(name='stream-link', aliases=['stream'], brief='Get link to the official Twitch')
