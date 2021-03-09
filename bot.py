@@ -117,8 +117,9 @@ async def rip_twitch_emotes(ctx):
                     )
                 except discord.HTTPException as error:
                     if error.code == 30008:
-                        return await ctx.send('Reached emote limit, exiting command.\n'
-                                              f'{error}')
+                        await ctx.send('Reached emote limit, exiting command.\n'
+                                       f'{error}')
+                        break
                     await ctx.send(f'Invalid emote name or url: {emote_name} <{emote_image_link}>\n'
                                    f'{error}')
                 else:
