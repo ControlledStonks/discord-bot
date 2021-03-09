@@ -92,42 +92,41 @@ async def rip_twitch_emotes(ctx):
     existing_emotes = {e.name: e for e in ctx.guild.emojis}
     last_skipped = []
 
-    try:
-        async with aiohttp.ClientSession(loop=ctx.bot.loop) as session:
-            for emote_name, emote_image_link in twitch_emotes.items():
-                # if emote_name == 'TheIlluminati':
-                #     input('aaaaaaaaaaa')
-                print(f'{emote_name} {emote_image_link}')
-                if emote_name in existing_emotes:
-                    last_skipped.append(str(existing_emotes[emote_name]))
+    async with aiohttp.ClientSession(loop=ctx.bot.loop) as session:
+        for emote_name, emote_image_link in twitch_emotes.items():
+            if emote_name in existing_emotes:
+                last_skipped.append(str(existing_emotes[emote_name]))
 
+            else:
+                if last_skipped:
+                    await ctx.send(f"Already exists: {''.join(last_skipped)}")
+                    last_skipped = []
+
+                # download the image
+                async with session.get(emote_image_link) as response:
+                    image_download = await response.read()
+                if len(image_download) > 256000:
+                    await ctx.send(f'Image file is too large ({len(image_download)} bytes): '
+                                   f'{emote_name} <{emote_image_link}>')
+                    continue
+
+                try:
+                    new_emote = await ctx.guild.create_custom_emoji(
+                        name=emote_name, image=image_download,
+                        reason='ControlledStonks Bot rip-twitch-emotes command'
+                    )
+                except discord.HTTPException as error:
+                    if error.code == 30008:
+                        return await ctx.send('Reached emote limit, exiting command.\n'
+                                              f'{error}')
+                    await ctx.send(f'Invalid emote name or url: {emote_name} <{emote_image_link}>\n'
+                                   f'{error}')
                 else:
-                    if last_skipped:
-                        await ctx.send(f"Already exists: {''.join(last_skipped)}")
-                        last_skipped = []
+                    await ctx.send(f'Added {new_emote}')
 
-                    # download the image
-                    async with session.get(emote_image_link) as response:
-                        image_download = await response.read()
-
-                    try:
-                        new_emote = await ctx.guild.create_custom_emoji(
-                            name=emote_name, image=image_download,
-                            reason='ControlledStonks Bot rip-twitch-emotes command'
-                        )
-                    except discord.HTTPException as error:
-                        print(f'Invalid emote name or url: {emote_name} <{emote_image_link}>\n'
-                              f'{error}')
-                        await ctx.send(f'Invalid emote name or url: {emote_name} <{emote_image_link}>\n'
-                                       f'{error}')
-                    else:
-                        await ctx.send(f'Added {new_emote}')
-
-        if last_skipped:
-            await ctx.send(f"Already exists: {''.join(last_skipped)}")
-        await ctx.send('Done adding emotes!')
-    except Exception as e:
-        print(e)
+    if last_skipped:
+        await ctx.send(f"Already exists: {''.join(last_skipped)}")
+    await ctx.send('Done adding emotes!')
 
 
 @discord_bot.event
