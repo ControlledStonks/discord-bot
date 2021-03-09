@@ -1,4 +1,5 @@
 import json
+import typing
 import bmemcached
 import discord.ext.commands.bot
 
@@ -32,10 +33,15 @@ async def get_emote(ctx):
 
 @discord_bot.command(name='set-emote', aliases=['set', 'emote'], brief='Set the current spam emote on API')
 @discord.ext.commands.check(is_admin)
-async def set_emote(ctx, new_emote):
+async def set_emote(ctx, new_emote: typing.Union[discord.Emoji, str]):
+    if isinstance(new_emote, discord.Emoji):
+        new_emote_str = new_emote.name
+    else:
+        new_emote_str = new_emote
+
     current_emote = await ctx.invoke(get_emote)
-    if new_emote != current_emote:
-        memcache.set('emote', new_emote)
+    if new_emote_str != current_emote:
+        memcache.set('emote', new_emote_str)
         await ctx.send(f"<@{ctx.author.id}> set emote to {new_emote} <@&{config['ping_role_id']}>")
 
 
