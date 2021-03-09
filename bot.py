@@ -1,7 +1,10 @@
 import json
 import typing
+
 import bmemcached
+import aiohttp
 import discord.ext.commands.bot
+from bs4 import BeautifulSoup
 
 
 with open('config.json') as config_file:
@@ -63,6 +66,68 @@ async def stream_link(ctx):
 @discord_bot.command(name='discord-link', aliases=['discord'], brief='Get link to the official Discord')
 async def discord_link(ctx):
     await ctx.send('https://discord.gg/hgaJvACRFz')
+
+
+@discord_bot.command(name='rip-twitch-emotes', hidden=True)
+async def rip_twitch_emotes(ctx):
+    # get the index webpage
+    url = 'https://www.streamscheme.com/resources/twitch-emotes-meaning-complete-list-monkas-pogchamp-omegalul-kappa/'
+    await ctx.send(f'Downloading index page <{url}>')
+    async with aiohttp.ClientSession(loop=ctx.bot.loop) as session:
+        async with session.get(url) as response:
+            html = await response.text()
+
+    # parse the index webpage to get a dict of emotes names and image urls
+    await ctx.send('Parsing index page')
+    soup = BeautifulSoup(html, 'html.parser')
+    twitch_emotes = {}
+    for div in soup.find_all('figure', {'class': 'wp-block-image size-large'}):
+        # print(div)
+        emote_image_link = div.find_next('img').attrs['data-lazy-src'].removesuffix('.webp')
+        emote_name = div.find_next('figcaption').find_next('a').string
+        twitch_emotes[emote_name] = emote_image_link
+
+    # add the emotes to the discord!
+    await ctx.send('Adding emotes')
+    existing_emotes = {e.name: e for e in ctx.guild.emojis}
+    last_skipped = []
+
+    try:
+        async with aiohttp.ClientSession(loop=ctx.bot.loop) as session:
+            for emote_name, emote_image_link in twitch_emotes.items():
+                # if emote_name == 'TheIlluminati':
+                #     input('aaaaaaaaaaa')
+                print(f'{emote_name} {emote_image_link}')
+                if emote_name in existing_emotes:
+                    last_skipped.append(str(existing_emotes[emote_name]))
+
+                else:
+                    if last_skipped:
+                        await ctx.send(f"Already exists: {''.join(last_skipped)}")
+                        last_skipped = []
+
+                    # download the image
+                    async with session.get(emote_image_link) as response:
+                        image_download = await response.read()
+
+                    try:
+                        new_emote = await ctx.guild.create_custom_emoji(
+                            name=emote_name, image=image_download,
+                            reason='ControlledStonks Bot rip-twitch-emotes command'
+                        )
+                    except discord.HTTPException as error:
+                        print(f'Invalid emote name or url: {emote_name} <{emote_image_link}>\n'
+                              f'{error}')
+                        await ctx.send(f'Invalid emote name or url: {emote_name} <{emote_image_link}>\n'
+                                       f'{error}')
+                    else:
+                        await ctx.send(f'Added {new_emote}')
+
+        if last_skipped:
+            await ctx.send(f"Already exists: {''.join(last_skipped)}")
+        await ctx.send('Done adding emotes!')
+    except Exception as e:
+        print(e)
 
 
 @discord_bot.event
